@@ -1,4 +1,5 @@
 from agents import *
+from storage import *
 import uuid
 
 MAX_ITERACOES = 3
@@ -38,12 +39,31 @@ def pipeline(pergunta):
             "critico": critico
         })
 
+        # fallback por score
+        if critico.get("score_total", 0) >= 24:
+            # memória do curador (textos selecionados)
+            salvar_memoria(
+                tipo="curador",
+                pergunta=contexto["pergunta"],
+                conteudo=curador,
+                score=critico.get("score_total")
+            )
+            # memória do integrador (resposta final)
+            salvar_memoria(
+                tipo="integrador",
+                pergunta=contexto["pergunta"],
+                conteudo=resposta_atual,
+                score=critico.get("score_total")
+            )
+            # reforçar memória do integrador
+            reforcar_memorias(contexto["pergunta"], tipo="integrador")
+
+            # reforçar memória do curador
+            reforcar_memorias(contexto["pergunta"], tipo="curador")            
+            return resposta_atual
+        
         # decisão inteligente
         if critico.get("decisao") == "APROVAR":
             return resposta_atual
-
-        # fallback por score
-        if critico.get("score_total", 0) >= 24:
-            return resposta_atual
-
+    
     return resposta_atual

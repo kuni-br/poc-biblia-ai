@@ -1,7 +1,7 @@
 import requests
 import json
 from rag import buscar_versiculos
-from storage import save_output
+from storage import save_output, buscar_memoria
 
 # =========================
 # CORE LLM
@@ -9,7 +9,15 @@ from storage import save_output
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "llama3:8b-instruct-q4_K_M"
 
-def chamar_llm(prompt):
+# Sugestão:
+# | Agente     | Temperatura |
+# | ---------- | ----------- |
+# | Curador    | 0.1         |
+# | Exegeta    | 0.2         |
+# | Integrador | 0.4         |
+# | Refinador  | 0.3         |
+# | Crítico    | 0.0         |
+def chamar_llm(prompt, temperature=0.2):
     for _ in range(3):
         try:
             response = requests.post(
@@ -19,7 +27,7 @@ def chamar_llm(prompt):
                     "prompt": prompt,
                     "stream": False,
                     "options": {
-                        "temperature": 0.2
+                        "temperature": temperature,
                     }
                 }
             )
@@ -29,8 +37,8 @@ def chamar_llm(prompt):
 
     return "Erro ao chamar modelo"
 
-def chamar_llm_json(prompt):
-    raw = chamar_llm(prompt)
+def chamar_llm_json(prompt, temperature=0.0):
+    raw = chamar_llm(prompt, temperature=temperature)
 
     try:
         return json.loads(raw)
@@ -55,26 +63,35 @@ def chamar_llm_json(prompt):
 # =========================
 def agente_curador(contexto, run_id, iteracao):
     resultados = buscar_versiculos(contexto["pergunta"])
+    memorias = buscar_memoria(contexto["pergunta"], tipo="curador")
 
     prompt = f"""
     PERGUNTA:
     {contexto['pergunta']}
 
+    MEMÓRIAS DE SELEÇÃO ANTERIOR:
+    {memorias}
+
     TEXTOS RECUPERADOS:
     {resultados}
 
     TAREFA:
-    Selecione até 5 textos mais relevantes.
+    Selecione até 5 textos bíblicos mais relevantes considerando:
+    - Similaridade com a pergunta
+    - Profundidade existencial
+    - Conexão com memórias anteriores
+
+    IMPORTANTE:
+    - Priorize a similaridade com a pergunta
+    - Use as memórias como referência de qualidade, mas NÃO copie diretamente
 
     Para cada texto:
     - Referência
     - Resumo
     - Relevância
-
-    Seja objetivo.
     """
 
-    resposta = chamar_llm(prompt)
+    resposta = chamar_llm(prompt, temperature=0.1)
 
     save_output(run_id, iteracao, "curador",
                 contexto["pergunta"], str(resultados), resposta)
@@ -99,7 +116,7 @@ def agente_exegeta(textos, contexto, run_id, iteracao):
     Evite generalizações.
     """
 
-    resposta = chamar_llm(prompt)
+    resposta = chamar_llm(prompt, temperature=0.2)
 
     save_output(run_id, iteracao, "exegeta",
                 contexto["pergunta"], textos, resposta)
@@ -110,6 +127,8 @@ def agente_exegeta(textos, contexto, run_id, iteracao):
 # AGENTE INTEGRADOR
 # =========================
 def agente_integrador(analise, contexto, run_id, iteracao):
+    memorias = buscar_memoria(contexto["pergunta"], tipo="integrador")
+    
     prompt = f"""
     BASE:
     {analise}
@@ -117,15 +136,22 @@ def agente_integrador(analise, contexto, run_id, iteracao):
     PERGUNTA:
     {contexto['pergunta']}
 
+
+    MEMÓRIAS DE RESPOSTAS PROFUNDAS:
+    {memorias}
+
     TAREFA:
     Gere uma resposta existencial e pastoral:
-
     - Clara
     - Profunda
     - Conectada à experiência humana
+
+    NÃO copie as memórias diretamente, use as como referência de qualidade
+
+    Busque originalidade com consistência
     """
 
-    resposta = chamar_llm(prompt)
+    resposta = chamar_llm(prompt, temperature=0.4)
 
     save_output(run_id, iteracao, "integrador",
                 contexto["pergunta"], analise, resposta)
@@ -211,7 +237,7 @@ def agente_refinador(resposta, feedback, contexto, run_id, iteracao):
     - Mais conexão humana
     """
 
-    resposta_refinada = chamar_llm(prompt)
+    resposta_refinada = chamar_llm(prompt, temperature=0.3)
 
     save_output(run_id, iteracao, "refinador",
                 contexto["pergunta"], resposta, resposta_refinada)
