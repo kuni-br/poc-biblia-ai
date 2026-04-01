@@ -1,169 +1,152 @@
-# 📖 PoC Bíblia IA - Multiagente (v0.2)
+# 📖 PoC Bíblia IA - v0.3
 
-Uma prova de conceito de um sistema multiagente para gerar **reflexões existenciais baseadas na Bíblia**, utilizando LLM local via Ollama, RAG semântico e pipeline iterativo com avaliação automática.
+## 🧠 Visão Geral
 
----
+Esta Proof of Concept (PoC) implementa uma **comunidade de agentes de IA especializados em reflexão existencial baseada na Bíblia**, com arquitetura multiagente, memória semântica adaptativa e avaliação automática.
 
-## 🎯 Objetivo
+O sistema simula um processo interpretativo inspirado em tradições teológicas:
 
-Construir uma comunidade de agentes de IA capazes de:
-
-* Interpretar textos bíblicos
-* Gerar reflexões existenciais profundas
-* Avaliar a qualidade das respostas
-* Refinar iterativamente o conteúdo
-
-Inspirado na autoavaliação de personagens bíblicos como Davi, Paulo e Pedro.
+* Seleção de textos (curadoria)
+* Análise exegética
+* Síntese existencial
+* Avaliação crítica
+* Refinamento iterativo
 
 ---
 
-## 🧠 Arquitetura
+## 🚀 Novidades da versão 0.3
 
-Pipeline multiagente com loop de refinamento:
+### 🧠 Memória Semântica Evolutiva
 
-```
-Curador → Exegeta → Integrador → Crítico → Refinador
-                                 ↑         ↓
-                           (loop iterativo)
-```
+* Memória separada por tipo:
 
----
+  * `curador` → seleção de versículos
+  * `integrador` → respostas existenciais
+* Busca híbrida com:
 
-## 🤖 Agentes
-
-### 🔎 Curador
-
-* Recupera versículos via RAG
-* Seleciona os mais relevantes
-
-### 📜 Exegeta
-
-* Analisa o contexto histórico e teológico
-* Identifica conflitos humanos no texto
-
-### 🧩 Integrador
-
-* Gera resposta existencial
-* Conecta Bíblia com experiência humana
-
-### ⚖️ Crítico (JSON)
-
-* Avalia a resposta em:
-
-  * Fidelidade bíblica
-  * Clareza
-  * Profundidade
-* Retorna saída estruturada em JSON
-
-### 🔧 Refinador
-
-* Reescreve a resposta com base no feedback
-* Melhora progressivamente a qualidade
+  * Similaridade semântica
+  * Score do agente crítico
+  * Peso dinâmico (reforço)
+  * Recência
+  * Frequência de uso
 
 ---
 
-## 🔁 Loop Inteligente
+### 🔁 Aprendizado Contínuo
 
-O sistema executa até `MAX_ITERACOES` (default: 3):
+* **Reforço positivo**:
 
-* Se `decisao == APROVAR` → encerra
-* Se `score_total >= 24` → aceita resposta
-* Caso contrário → refinamento contínuo
+  * Memórias associadas a respostas bem avaliadas são fortalecidas
+* **Esquecimento (decay)**:
 
----
+  * Memórias não utilizadas perdem relevância ao longo do tempo
+* **Limpeza automática**:
 
-## 📦 Estrutura do Projeto
-
-```
-.
-├── agents.py        # Definição dos agentes
-├── app.py           # Pipeline principal
-├── main.py          # Execução da aplicação
-├── rag.py           # Busca semântica (RAG)
-├── storage.py       # Persistência SQLite
-├── data/
-│   ├── biblia_ara_index.json
-│   └── logs.db
-```
+  * Remoção de memórias fracas
 
 ---
 
-## 🧪 Tecnologias Utilizadas
+### 🤖 Arquitetura Multiagente
 
-* 🧠 LLM local via Ollama (`llama3`)
-* 🔎 Sentence Transformers (`all-MiniLM-L6-v2`)
-* 🧮 NumPy (similaridade vetorial)
-* 🗄 SQLite (persistência)
-* 🐍 Python
-
----
-
-## 🔍 RAG (Retrieval-Augmented Generation)
-
-O sistema utiliza embeddings semânticos para recuperar versículos relevantes:
-
-* Modelo: `all-MiniLM-L6-v2`
-* Similaridade: **cosine similarity**
-* Top-K: 5 versículos
+| Agente     | Função                                 |
+| ---------- | -------------------------------------- |
+| Curador    | Seleciona textos bíblicos relevantes   |
+| Exegeta    | Analisa contexto histórico e teológico |
+| Integrador | Gera resposta existencial              |
+| Crítico    | Avalia qualidade (JSON estruturado)    |
+| Refinador  | Melhora respostas com base no feedback |
 
 ---
 
-## 📊 Avaliação Estruturada (Crítico)
+### 📊 Avaliação Automatizada
 
-Exemplo de saída do agente crítico:
+O agente crítico avalia:
+
+* Fidelidade bíblica
+* Clareza
+* Profundidade
+
+E retorna:
 
 ```json
 {
-  "fidelidade": 8,
-  "clareza": 9,
-  "profundidade": 7,
-  "score_total": 24,
-  "feedback": "Boa conexão com o texto bíblico, mas pode aprofundar a aplicação pessoal.",
-  "decisao": "REVISAR"
+  "score_total": 0-30,
+  "decisao": "APROVAR" ou "REVISAR"
 }
 ```
 
 ---
 
-## 💾 Persistência
+### 🧩 RAG (Retrieval-Augmented Generation)
 
-Cada execução é registrada em SQLite (`data/logs.db`):
-
-Tabela: `runs`
-
-Campos:
-
-* `run_id`
-* `iteracao`
-* `agente`
-* `pergunta`
-* `entrada`
-* `saida`
-* `score`
-* `feedback`
-* `raw_json`
+* Baseado em embeddings pré-processados (JSON)
+* Busca por similaridade semântica
+* Ranking híbrido com densidade existencial
 
 ---
 
-## 🚀 Como executar
+## 🏗️ Arquitetura
+
+```text
+Pergunta
+  ↓
+Curador (RAG + memória)
+  ↓
+Exegeta
+  ↓
+Integrador (memória)
+  ↓
+Crítico (avaliação)
+  ↓
+Refinador (se necessário)
+```
+
+---
+
+## 📁 Estrutura do Projeto
+
+```text
+poc-biblia-ai/
+│
+├── agents.py          # Lógica dos agentes
+├── app.py             # Orquestração do pipeline
+├── main.py            # Ponto de entrada
+├── storage.py         # Banco + memória semântica
+├── rag.py             # Busca de versículos (JSON)
+├── llm_client.py      # Abstração de LLM (Ollama/OpenAI)
+│
+├── data/
+│   ├── biblia_ara_index.json
+│   └── logs.db
+│
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## ⚙️ Configuração
 
 ### 1. Instalar dependências
 
 ```bash
-pip install sentence-transformers numpy requests
+pip install -r requirements.txt
 ```
 
 ---
 
-### 2. Iniciar o Ollama
+### 2. Configurar variáveis de ambiente
 
-```bash
-ollama run llama3
+Crie um arquivo `.env`:
+
+```env
+LLM_PROVIDER=ollama
+OPENAI_API_KEY=your_key_here
 ```
 
 ---
 
-### 3. Executar o projeto
+### 3. Rodar o sistema
 
 ```bash
 python main.py
@@ -171,88 +154,160 @@ python main.py
 
 ---
 
-## 🧪 Exemplos de Perguntas
+## 🤖 Modelos suportados
 
-```python
-perguntas = [
-    "Por que reconhecer meus erros é tão difícil?",
-    "Por que o ser humano falha mesmo querendo acertar?",
-    "Como lidar com uma culpa profunda?",
-    "Qual o sentido do sofrimento?"
-]
+### 🟢 Ollama (local)
+
+* Modelo padrão:
+
+  ```
+  llama3:8b-instruct-q4_K_M
+  ```
+
+---
+
+### 🔵 OpenAI (opcional)
+
+* Modelo:
+
+  ```
+  gpt-4.1-mini
+  ```
+
+Trocar via `.env`:
+
+```env
+LLM_PROVIDER=openai
 ```
 
 ---
 
-## 🔧 Melhorias da versão 0.2
+## 🧠 Memória Semântica
 
-### ✅ Arquitetura
+### Estrutura
 
-* Introdução de loop iterativo real
-* Separação clara de responsabilidades entre agentes
-
-### ✅ Crítico estruturado
-
-* Saída em JSON (eliminando parsing frágil)
-* Validação de estrutura
-
-### ✅ Robustez
-
-* Fallback para extração de JSON
-* Tratamento de erro no parsing
-
-### ✅ RAG aprimorado
-
-* Uso correto de cosine similarity
-* Melhor ranking semântico
-
-### ✅ Persistência evoluída
-
-* Armazenamento de JSON bruto (`raw_json`)
-* Suporte a análise posterior
+```text
+tipo | pergunta | conteudo | embedding | score | peso | vezes_usada | ultimo_uso
+```
 
 ---
 
-## ⚠️ Limitações atuais
+### Ranking híbrido
 
-* Dependência de LLM local (latência)
-* Possível inconsistência no JSON do crítico
-* Sem validação teológica profunda (ainda)
-* Sem memória entre execuções
-
----
-
-## 🔮 Próximos passos (v0.3+)
-
-* 📚 Agente baseado em personagens bíblicos (Davi, Paulo, etc.)
-* 🧠 Memória semântica entre execuções
-* 📊 Dashboard de avaliação dos agentes
-* 🔍 Validação automática de referências bíblicas
-* 🎯 Ranking de respostas por qualidade
+```text
+score_final =
+  similaridade +
+  score +
+  peso +
+  recência +
+  frequência
+```
 
 ---
 
-## 📌 Conclusão
+### Tipos de memória
 
-Esta PoC demonstra como um sistema multiagente pode:
+| Tipo       | Uso                             |
+| ---------- | ------------------------------- |
+| curador    | melhorar seleção de versículos  |
+| integrador | melhorar respostas existenciais |
 
-* Interpretar textos complexos
-* Gerar reflexão existencial
-* Avaliar a si mesmo
-* Evoluir iterativamente
+---
 
-Servindo como base para sistemas mais avançados de IA aplicada à teologia e filosofia.
+## 🔁 Aprendizado
+
+### ✔ Reforço
+
+* Aplicado quando:
+
+  ```
+  score_total >= 24
+  ```
+* Aumenta o peso das memórias relevantes
+
+---
+
+### 🗑️ Decay
+
+* Reduz peso com o tempo
+* Remove memórias fracas
+
+---
+
+## 📊 Logs e Observabilidade
+
+Tabela `runs` armazena:
+
+* entrada
+* saída por agente
+* score
+* feedback
+
+---
+
+## 🧪 Exemplo de uso
+
+```text
+Pergunta:
+"Por que eu sinto vazio mesmo tendo tudo?"
+```
+
+Saída:
+
+* textos bíblicos relevantes
+* análise exegética
+* resposta existencial profunda
+* avaliação automática
+* refinamento (se necessário)
+
+---
+
+## 🎯 Objetivo da PoC
+
+Criar um sistema que:
+
+* interpreta a Bíblia de forma contextual
+* responde questões existenciais humanas
+* aprende com o tempo
+* evolui qualitativamente
+
+---
+
+## 🔮 Próximos passos
+
+* Ranking por densidade existencial avançado
+* Clusterização de temas (culpa, propósito, sofrimento)
+* Avaliação comparativa entre modelos (A/B test)
+* Interface web
+* Uso de banco vetorial
+
+---
+
+## 🧠 Insight central
+
+Este projeto não é apenas um chatbot.
+
+É um sistema que busca simular:
+
+> uma tradição interpretativa que aprende, refina e amadurece com o tempo.
+
+---
+
+## 📌 Versão
+
+```
+v0.3 — Memória adaptativa + aprendizado contínuo
+```
 
 ---
 
 ## 👨‍💻 Autor
 
-Projeto desenvolvido por Marcos Kuniyoshi
+Projeto experimental para estudo de:
 
----
-
-## 📄 Licença
-
-MIT
+* Multiagentes
+* RAG
+* Memória semântica
+* IA aplicada à teologia
 
 ---
