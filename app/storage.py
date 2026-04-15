@@ -38,7 +38,7 @@ def init_db():
         embedding BLOB,
         score REAL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        vezes_usado INTEGER DEFAULT 0,
+        vezes_usada INTEGER DEFAULT 0,
         ultimo_uso DATETIME,
         peso REAL DEFAULT 1.0
     )
@@ -186,7 +186,7 @@ def buscar_memoria(pergunta, tipo, top_k=3):
         # =========================
         score_final = (
             sim * 0.5 +
-            score * 0.06 +
+            score * 0.006 +
             peso * 0.2 +
             fator_recencia * 0.05 +
             fator_frequencia * 0.05

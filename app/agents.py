@@ -2,14 +2,10 @@ import requests
 import json
 from rag import buscar_versiculos
 from storage import save_output, buscar_memoria
+from llm_client import chamar_llm, chamar_llm_json
 
-# =========================
-# CORE LLM
-# =========================
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3:8b-instruct-q4_K_M"
-
-# Sugestão:
+# ============================
+# | Sugestão:                |
 # | Agente     | Temperatura |
 # | ---------- | ----------- |
 # | Curador    | 0.1         |
@@ -17,63 +13,23 @@ MODEL = "llama3:8b-instruct-q4_K_M"
 # | Integrador | 0.4         |
 # | Refinador  | 0.3         |
 # | Crítico    | 0.0         |
-def chamar_llm(prompt, temperature=0.2):
-    for _ in range(3):
-        try:
-            response = requests.post(
-                OLLAMA_URL,
-                json={
-                    "model": MODEL,
-                    "prompt": prompt,
-                    "stream": False,
-                    "options": {
-                        "temperature": temperature,
-                    }
-                }
-            )
-            return response.json()["response"]
-        except:
-            continue
-
-    return "Erro ao chamar modelo"
-
-def chamar_llm_json(prompt, temperature=0.0):
-    raw = chamar_llm(prompt, temperature=temperature)
-
-    try:
-        return json.loads(raw)
-    except:
-        # tenta extrair JSON dentro do texto
-        try:
-            start = raw.find("{")
-            end = raw.rfind("}") + 1
-            json_str = raw[start:end]
-            return json.loads(json_str)
-        except:
-            return {
-                "erro": True,
-                "raw": raw,
-                "score_total": 0,
-                "feedback": "Erro ao interpretar JSON",
-                "decisao": "REVISAR"
-            }
-
-# =========================
+# ============================
 # AGENTE CURADOR
 # =========================
 def agente_curador(contexto, run_id, iteracao):
     resultados = buscar_versiculos(contexto["pergunta"])
     memorias = buscar_memoria(contexto["pergunta"], tipo="curador")
+    # memorias = ""
 
     prompt = f"""
     PERGUNTA:
     {contexto['pergunta']}
 
-    MEMÓRIAS DE SELEÇÃO ANTERIOR:
-    {memorias}
-
     TEXTOS RECUPERADOS:
     {resultados}
+
+    MEMÓRIAS DE SELEÇÕES ANTERIORES:
+    {memorias}    
 
     TAREFA:
     Selecione até 5 textos bíblicos mais relevantes considerando:
@@ -83,7 +39,7 @@ def agente_curador(contexto, run_id, iteracao):
 
     IMPORTANTE:
     - Priorize a similaridade com a pergunta
-    - Use as memórias como referência de qualidade, mas NÃO copie diretamente
+    - NÃO copie as memórias diretamente, use as somente como referência de qualidade
 
     Para cada texto:
     - Referência
@@ -128,7 +84,8 @@ def agente_exegeta(textos, contexto, run_id, iteracao):
 # =========================
 def agente_integrador(analise, contexto, run_id, iteracao):
     memorias = buscar_memoria(contexto["pergunta"], tipo="integrador")
-    
+    # memorias = ""
+
     prompt = f"""
     BASE:
     {analise}
@@ -136,19 +93,21 @@ def agente_integrador(analise, contexto, run_id, iteracao):
     PERGUNTA:
     {contexto['pergunta']}
 
-
-    MEMÓRIAS DE RESPOSTAS PROFUNDAS:
+    MEMÓRIAS DE SELEÇÕES ANTERIORES:
     {memorias}
-
+        
     TAREFA:
     Gere uma resposta existencial e pastoral:
     - Clara
     - Profunda
     - Conectada à experiência humana
+    - Busque originalidade com consistência
+    
+    IMPORTANTE:
+    - Priorize a similaridade com a pergunta
+    - NÃO copie as memórias diretamente, use as somente como referência de qualidade
 
-    NÃO copie as memórias diretamente, use as como referência de qualidade
-
-    Busque originalidade com consistência
+    Inclua as referências bíblicas após a conclusão
     """
 
     resposta = chamar_llm(prompt, temperature=0.4)
