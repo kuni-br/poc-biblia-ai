@@ -267,9 +267,8 @@ poc-biblia-ai/
 │
 ├── .env.example           # Template de configuração
 ├── requirements.txt       # Dependências Python
-├── LICENSE               # Licença MIT
-├── README.md             # Documentação original
-└── newREADME.md          # Esta documentação melhorada
+├── LICENSE                # Licença MIT
+└── README.md              # Documentação
 ```
 
 ## 🧪 Como Usar
