@@ -1,5 +1,5 @@
-from agents import *
-from storage import *
+from .agents import *
+from .storage import *
 import uuid
 
 MAX_ITERACOES = 3

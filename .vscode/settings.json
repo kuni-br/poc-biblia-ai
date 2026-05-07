@@ -1,4 +1,5 @@
 {
     "continue.enableNextEdit": false,
-    "continue.enableTabAutocomplete": false
+    "continue.enableTabAutocomplete": false,
+    "terminal.integrated.defaultProfile.windows": "Ubuntu-26.04 (WSL)"
 }

@@ -1,4 +1,4 @@
-# 📖 PoC Bíblia IA - v0.3
+# 📖 PoC Bíblia IA - v0.4
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -34,7 +34,7 @@ Esta **Proof of Concept (PoC)** implementa uma comunidade de agentes de IA espec
 
 ```bash
 # 1. Clone o repositório
-git clone <repo-url>
+git clone https://github.com/kuni-br/poc-biblia-ai.git
 cd poc-biblia-ai
 
 # 2. Instale dependências
@@ -45,6 +45,7 @@ pip install -r requirements.txt
 # Faça download do arquivo: https://github.com/thiagobodruk/biblia/blob/master/json/aa.json
 # Salve como: data/biblia_ara.json
 # Em seguida, execute a ingestão:
+python scripts/convert_biblia.py
 python scripts/ingest_biblia.py
 
 # 4. Configure o ambiente
@@ -57,7 +58,7 @@ python app/main.py
 
 ## 📋 Pré-requisitos
 
-- **Python 3.8+** com pip
+- **Python 3.10+** com pip
 - **Ollama** (opcional, para execução local) - [Instalação](https://ollama.ai/)
 - **Conta DeepSeek** (opcional, para API cloud) - [Registro](https://platform.deepseek.com/)
 - **~2GB RAM** livre para modelos locais
@@ -83,7 +84,7 @@ pip install -r requirements.txt
 
 > **Nota**: Se `requirements.txt` estiver vazio, instale manualmente:
 > ```bash
-> pip install sentence-transformers numpy requests openai python-dotenv
+> pip install sentence-transformers numpy requests openai python-dotenv uvicorn fastapi pydantic
 > ```
 
 ### 3. Obtenha os Dados da Bíblia
@@ -98,13 +99,14 @@ mkdir -p data
 # Salve como: data/biblia_ara.json
 
 # Opção 2: Usando curl (se disponível)
-curl -L "https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/aa.json" -o "data/biblia_ara.json"
+curl -L "https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/aa.json" -o "data/pt_ara.json"
 ```
 
 ### 4. Modelo Ollama (Opcional)
 
 ```bash
 # Instale o Ollama primeiro (https://ollama.ai/)
+curl -fsSL https://ollama.com/install.sh | sh
 ollama pull llama3:8b-instruct-q4_K_M
 ```
 
@@ -133,6 +135,7 @@ Após obter o arquivo data/biblia_ara.json (baixado do repositório thiagobodruk
 
 ```bash
 # Processa a Bíblia e gera embeddings para busca semântica
+python scripts/convert_biblia.py
 python scripts/ingest_biblia.py
 ```
 
@@ -245,8 +248,10 @@ O sistema usa SQLite com três tabelas principais:
 
 ```text
 poc-biblia-ai/
-├── app/                    # Código principal
+├── app/                   # Código principal
+│   ├── __init__.py        # Torna o diretório um pacote Python
 │   ├── agents.py          # Definição dos agentes
+│   ├── api.py             # API FastAPI (endpoints REST)
 │   ├── app.py             # Pipeline de orquestração
 │   ├── main.py            # Ponto de entrada com perguntas de exemplo
 │   ├── storage.py         # Banco SQLite + memória semântica
@@ -316,6 +321,47 @@ SELECT * FROM runs ORDER BY timestamp DESC LIMIT 5;
 SELECT agente, COUNT(*) FROM runs GROUP BY agente;
 SELECT score, decisao FROM runs WHERE raw_json LIKE '%decisao%';
 ```
+
+## 🌐 Uso via API (novo)
+
+A partir da versão atual, a aplicação também pode ser acessada como um serviço REST.
+
+### Subir o servidor
+``` bash
+uvicorn app.api:app --reload
+```
+A API estará disponível em http://127.0.0.1:8000.
+
+A documentação interativa (Swagger) pode ser acessada em http://127.0.0.1:8000/docs.
+
+### Endpoints
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | /health | Verifica se a API está ativa |
+| POST | /pipeline | Envia uma pergunta e recebe a reflexão |
+
+### POST /pipeline
+
+#### Request body (JSON):
+
+```json
+{
+  "pergunta": "Por que sinto vazio mesmo tendo tudo?"
+}
+```
+
+#### Response (JSON):
+
+```json
+{
+  "pergunta": "Por que sinto vazio mesmo tendo tudo?",
+  "resposta": "… reflexão gerada pelos agentes …",
+  "status": "sucesso"
+}
+```
+
+
 
 ## 📊 Memória e Aprendizado
 

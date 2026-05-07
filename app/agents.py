@@ -1,8 +1,8 @@
 import requests
 import json
-from rag import buscar_versiculos
-from storage import save_output, buscar_memoria
-from llm_client import chamar_llm, chamar_llm_json
+from .rag import buscar_versiculos
+from .storage import save_output, buscar_memoria
+from .llm_client import chamar_llm, chamar_llm_json
 
 # ============================
 # | Sugestão:                |
